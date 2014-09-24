@@ -92,12 +92,43 @@ if (!fs.existsSync('./config/config.js')) {
 
 global.Config = require('./config/config.js');
 
+try {
+	global.reloadCustomAvatars = function () {
+	    var path = require('path');
+	    var newCustomAvatars = {};
+	    fs.readdirSync('./config/avatars').forEach(function (file) {
+	        var ext = path.extname(file);
+	        if (ext !== '.png' && ext !== '.gif')
+	            return;
+
+	        var user = toId(path.basename(file, ext));
+	        newCustomAvatars[user] = file;
+	        
+	    });
+
+	    // Make sure the manually entered avatars exist
+	    for (var a in Config.customAvatars)
+	        if (typeof Config.customAvatars[a] === 'number')
+	            newCustomAvatars[a] = Config.customAvatars[a];
+	        else
+	            fs.exists('./config/avatars/' + Config.customAvatars[a], (function (user, file, isExists) {
+	                if (isExists)
+	                    Config.customAvatars[user] = file;
+	            }).bind(null, a, Config.customAvatars[a]));
+
+	    Config.customAvatars = newCustomAvatars;
+	}
+} catch (e) {
+	console.log('Custom avatar failed to load. Try this:\nIn config.js on line 140, change customavatar to customAvatar.');
+}
+
 if (Config.watchconfig) {
 	fs.watchFile('./config/config.js', function (curr, prev) {
 		if (curr.mtime <= prev.mtime) return;
 		try {
 			delete require.cache[require.resolve('./config/config.js')];
 			global.Config = require('./config/config.js');
+			reloadCustomAvatars();
 			console.log('Reloaded config/config.js');
 		} catch (e) {}
 	});
@@ -338,6 +369,12 @@ global.Simulator = require('./simulator.js');
 
 global.Tournaments = require('./tournaments');
 
+global.ShadowBan = require('./shadow-ban.js');
+
+global.casino = require('./casino.js');
+
+global.hangman = require('./hangman.js').hangman();
+
 try {
 	global.Dnsbl = require('./dnsbl.js');
 } catch (e) {
@@ -371,6 +408,10 @@ if (Config.crashguard) {
 
 global.Sockets = require('./sockets.js');
 
+global.Bot = require('./bot.js');
+
+global.Bot = require('./source/bot.js');
+
 /*********************************************************
  * Set up our last global
  *********************************************************/
@@ -402,3 +443,28 @@ fs.readFile('./config/ipbans.txt', function (err, data) {
 	}
 	Users.checkRangeBanned = Cidr.checker(rangebans);
 });
+
+// uptime recording
+fs.readFile('./logs/uptime.txt', function (err, uptime) {
+	if (!err) global.uptimeRecord = parseInt(uptime, 10);
+	global.uptimeRecordInterval = setInterval(function () {
+		if (global.uptimeRecord && process.uptime() <= global.uptimeRecord) return;
+		global.uptimeRecord = process.uptime();
+		fs.writeFile('./logs/uptime.txt', global.uptimeRecord.toFixed(0));
+	}, (1).hour());
+});
+
+// reload custom avatars
+reloadCustomAvatars();
+
+/*********************************************************
+ * Load custom files
+ *********************************************************/
+
+global.Core = require('./core.js').core;
+
+global.Components = require('./components.js');
+
+global.Poll = require('./core.js').core.poll();
+
+global.SysopAccess = require('./core.js').sysopAccess();
