@@ -63,12 +63,11 @@ var commands = exports.commands = {
 		}
 	},
 
-	 109.54.111.164
-		user.resetName();
-	},
+	 
+		
 
 sca: 'giveavatar',
-	setcustomavatar: 'giveavatar',
+	customavatar: 'giveavatar',
 	setcustomavi: 'giveavatar',
 	giveavatar: function(target, room, user, connection) {
         if (!this.can('giveavatar')) return this.sendReply('/giveavatar - Access denied.');
@@ -304,7 +303,7 @@ hallowme: function (target, room, user) {
 
 deletecode: function(target, room, user) {
 		if (!target) {
-			return this.sendReply('/deletecode [user] - Borra el Código de Amigo del usuario.');
+			return this.sendReply('/deletecode [user] - Clear a friendcode.');
 		}
 		if (!this.can('lock')) return false;
 		var t = this;
@@ -327,7 +326,7 @@ deletecode: function(target, room, user) {
 				var result = data.replace(re, '');
 				fs.writeFile('config/friendcodes.txt',result,'utf8',function(err) {
 					if (err) console.log(err);
-					t.sendReply('El friendcode '+line+' ha sido borrado.');
+					t.sendReply('The friendcode '+line+' is  eliminsted.');
 				});
 			} else {
 				t.sendReply('No hay ninguna coincidencia.');
@@ -405,33 +404,7 @@ lockshop: 'closeshop',
 	},
 
 
- removetc: function (target, room, user) {
-		if (!this.can('givemoney')) return false;
-		if (!target) return this.sendReply("Usage: /removetc usuario");
-		if (Shop.removeTrainerCard(target)) {
-			return this.sendReply("Tarjeta de entrenador del usuario " + toId(target) + ' eliminada.');
-		} else {
-			return this.sendReply("El usuario no poseía Tc.");
-		}
-	},
-	
-	setcustomtc: function (target, room, user) {
-		if (!this.can('givemoney')) return false;
-		var params = target.split(',');
-		if (!params || params.length !== 2) return this.sendReply("Usage: /setcustomtc usuario, [on/off]");
-		var permision = false;
-		if (toId(params[1]) !== 'on' && toId(params[1]) !== 'off') return this.sendReply("Usage: /setcustomtc usuario, [on/off]");
-		if (toId(params[1]) === 'on') permision = true;
-		if (permision) {
-			var userh = Users.getExact(params[0]);
-			if (!userh || !userh.connected) return this.sendReply("El usuario no existe o no está disponible");
-			if (Shop.setCustomTrainerCard(params[0], permision)) return this.sendReply("Permiso para customtrainercards concedido a " + userh.name);
-			return this.sendReply("El usuario no poseía Tc o ya tenía el permiso para customtrainercards.");
-		} else {
-			if (Shop.setCustomTrainerCard(params[0], permision)) return this.sendReply("Permiso para customtrainercards retirado a " + params[0]);
-			return this.sendReply("El usuario no poseía Tc o no tenía el permiso para customtrainercards.");
-		}
-	},
+ 
 	
 	
         	
@@ -459,153 +432,13 @@ fb: function () {
 			user.isFapping = true;
 		}
 		else {
-			return this.sendReply('You are already set as away, type /back if you are now back');
+			return this.sendReply('You are already set as fapping, type /back if you are now back');
 		}
 
 		user.updateIdentity();
 	},
 
-atm: 'profilu',
-	profilu: function (target, room, user, connection) {
-	    if (!this.canBroadcast()) return;
 
-	    if (target.length >= 19) {
-	    	return this.sendReply('Usernames are required to be less than 19 characters long.');
-	    }
-
-	    var targetUser = this.targetUserOrSelf(target);
-	    var name = '';
-	    if (!targetUser) {
-	    	name = toId(target);
-	    } else {
-	    	name = targetUser.userid;
-	    }
-	    var avatar = Utilities.findAvatar(name);
-	    var group = Utilities.stdin('usergroups.csv', name);
-	    var status = Utilities.stdin('db/status.csv', name);
-	    var money = Utilities.stdin('db/money.csv', name);
-
-		var util = require("util");
-		var http = require("http");
-
-		var options = {
-		    host: "www.pokemonshowdown.com",
-		    port: 80,
-		    path: "/forum/~" + name
-		};
-
-		var content = "";
-		var self = this;
-
-		if (!targetUser) {
-			if (typeof(avatar) === typeof('')) {
-				avatar = 'http://107.161.17.175:8000/avatars/' + avatar;
-			} else {
-				avatar = 'http://play.pokemonshowdown.com/sprites/trainers/168.png';
-			}
-			if (group === ' ') {
-				group = 'Regular User';
-			} else {
-				group = Config.groups.bySymbol[group].name;
-			}
-			if (status === ' ') {
-				status = 'This user hasn\'t set their status yet.';
-			}
-			if (money === '' || money === ' ') {
-				money = 0;
-			}
-
-			var lastOnline = Number(Utilities.stdin('db/lastOnline.csv', name));
-			if (lastOnline === Number(' ')) {
-				lastOnline = ' Never';
-			} else if (Math.floor((Date.now()-lastOnline)*0.001) < 60) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*0.001) + ' seconds ago';
-			} else if (Math.floor((Date.now()-lastOnline)*1.6667e-5) < 120) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*1.6667e-5) + ' minutes ago'; 
-			} else if (Math.floor((Date.now()-lastOnline)*2.7778e-7) < 48) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*2.7778e-7) + ' hours ago';
-			} else {
-				lastOnline = (Math.floor((Date.now()-lastOnline)*2.7778e-7)/24) + ' days ago';
-			}
-		} else {
-			if (targetUser.group === ' ') {
-				Config.groups.bySymbol[targetUser.group].name = 'Regular User';
-			}
-			io.stdinString('db/status.csv', user, 'status');
-			if (targetUser.status === '' || targetUser.status === '""') {
-				targetUser.status = 'This user hasn\'t set their status yet.';
-			}
-			var lastOnline = Number(Utilities.stdin('db/lastOnline.csv', name));
-			if (Math.floor((Date.now()-lastOnline)*0.001) < 60) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*0.001) + ' seconds ago';
-			} else if (Math.floor((Date.now()-lastOnline)*1.6667e-5) < 120) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*1.6667e-5) + ' minutes ago'; 
-			} else if (Math.floor((Date.now()-lastOnline)*2.7778e-7) < 48) {
-				lastOnline = Math.floor((Date.now()-lastOnline)*2.7778e-7) + ' hours ago';
-			} else {
-				lastOnline = (Math.floor((Date.now()-lastOnline)*2.7778e-7)/24) + ' days ago';
-			}
-			if (targetUser.connected === true) {
-				lastOnline = '<font color="green">Currently Online</font>';
-			}
-			io.stdinNumber('db/money.csv', user, 'money');
-			if (targetUser.money === Infinity) {
-				targetUser.money === Infinity;
-			}
-			io.stdinString('db/statusTime.csv', user, 'statusTime');
-		}
-
-		var req = http.request(options, function (res) {
-		    res.setEncoding("utf8");
-		    res.on("data", function (chunk) {
-		        content += chunk;
-		    });
-		    res.on("end", function () {
-		        content = content.split("<em");
-		        if (content[1]) {
-		            content = content[1].split("</p>");
-		            if (content[0]) {
-		                content = content[0].split("</em>");
-		                if (content[1]) {
-		                	if (!targetUser) {
-		                		self.sendReplyBox('<img src="' + avatar + '" height="80" width="80" align="left">' + '&nbsp;<strong><font color="#24678d">Name:</font></strong> ' + target + '<br />' + '&nbsp;<strong><font color="#24678d">Registered:</font></strong>' + content[1] + '<br/>' + '&nbsp;<strong><font color="#24678d">Rank:</font></strong> ' + group + '<br/>' + '&nbsp;<strong><font color="#24678d">Money:</font></strong> ' + money + '<br/>' + '&nbsp;<strong><font color="#24678d">Last Online:</font></strong> ' + lastOnline + '<br/>' + '&nbsp;<strong><font color="#24678d">Status:</font></strong> "' + status + '" <font color="gray">' + Utilities.stdin('db/statusTime.csv', name) + '</font><br clear="all" />');
-		                	} else if (targetUser.authenticated === true && typeof(targetUser.avatar) === typeof('')) {
-		                		self.sendReplyBox('<img src="http://2.195.109.96:8000/avatars/' + targetUser.avatar + '" height="80" width="80" align="left">' + '&nbsp;<strong><font color="#24678d">Name:</font></strong> ' + targetUser.name + '<br />' + '&nbsp;<strong><font color="#24678d">Registered:</font></strong>' + content[1] + '<br/>' + '&nbsp;<strong><font color="#24678d">Rank:</font></strong> ' + Config.groups.bySymbol[targetUser.group].name + '<br/>' + '&nbsp;<strong><font color="#24678d">Money:</font></strong> ' + targetUser.money + '<br/>' + '&nbsp;<strong><font color="#24678d">Last Online:</font></strong> ' + lastOnline + '<br/>' + '&nbsp;<strong><font color="#24678d">Status:</font></strong> "' + targetUser.status + '" <font color="gray">' + targetUser.statusTime + '</font><br clear="all" />');
-		                    } else {
-		                    	self.sendReplyBox('<img src="http://play.pokemonshowdown.com/sprites/trainers/' + targetUser.avatar + '.png" height="80" width="80" align="left">' + '&nbsp;<strong><font color="#24678d">Name:</font></strong> ' + targetUser.name + '<br />' + '&nbsp;<strong><font color="#24678d">Registered:</font></strong>' + content[1] + '<br/>' + '&nbsp;<strong><font color="#24678d">Rank:</font></strong> ' + Config.groups.bySymbol[targetUser.group].name + '<br/>' + '&nbsp;<strong><font color="#24678d">Money:</font></strong> ' + targetUser.money + '<br/>' + '&nbsp;<strong><font color="#24678d">Last Online:</font></strong> ' + lastOnline + '<br/>' + '&nbsp;<strong><font color="#24678d">Status:</font></strong> "' + targetUser.status + '" <font color="gray">' + targetUser.statusTime + '</font><br clear="all" />');
-		                    }
-		                }
-		            }
-		        } else {
-		        	if (!targetUser) {
-		        		self.sendReplyBox('<img src="' + avatar + '" height="80" width="80" align="left">' + '&nbsp;<strong><font color="#24678d">Name:</font></strong> ' + target + '<br />' + '&nbsp;<strong><font color="#24678d">Registered:</font></strong>' + content[1] + '<br/>' + '&nbsp;<strong><font color="#24678d">Rank:</font></strong> ' + group + '<br/>' + '&nbsp;<strong><font color="#24678d">Money:</font></strong> ' + money + '<br/>' + '&nbsp;<strong><font color="#24678d">Last Online:</font></strong> ' + lastOnline + '<br/>' + '&nbsp;<strong><font color="#24678d">Status:</font></strong> "' + status + '" <font color="gray">' + Utilities.stdin('db/statusTime.csv', name) + '</font><br clear="all" />');
-		        	} else {
-		        		self.sendReplyBox('<img src="http://play.pokemonshowdown.com/sprites/trainers/' + targetUser.avatar + '.png" height="80" width="80" align="left">' + '&nbsp;<strong><font color="#24678d">Name:</font></strong> ' + targetUser.name + '<br />' + '&nbsp;<strong><font color="#24678d">Registered:</font></strong>' + ' (Unregistered)' + '<br/>' + '&nbsp;<strong><font color="#24678d">Rank:</font></strong> ' + Config.groups.bySymbol[targetUser.group].name + '<br/>' + '&nbsp;<strong><font color="#24678d">Money:</font></strong> ' + targetUser.money + '<br/>' + '&nbsp;<strong><font color="#24678d">Last Online:</font></strong> ' + lastOnline + '<br/>' + '&nbsp;<strong><font color="#24678d">Status:</font></strong> "' + targetUser.status + '" <font color="gray">' + targetUser.statusTime + '</font><br clear="all" />');
-		        	}
-		        }
-		        room.update();
-		    });
-		});
-		req.end();
-	},
-
-	setstatus: 'status',
-	status: function(target, room, user){
-		if (!target) return this.sendReply('|raw|Set your status for profile. Usage: /status <i>status information</i>');
-		if (target.length > 30) return this.sendReply('Status is too long.');
-		if (target.indexOf(',') >= 1) return this.sendReply('Unforunately, your status cannot contain a comma.');
-		var escapeHTML = sanitize(target, true);
-		io.stdoutString('db/status.csv', user, 'status', escapeHTML);
-		
-		var currentdate = new Date(); 
-		var datetime = "Last Updated: " + (currentdate.getMonth()+1) + "/"+currentdate.getDate() + "/" + currentdate.getFullYear() + " @ "  + Utilities.formatAMPM(currentdate);
-		io.stdoutString('db/statusTime.csv', user, 'statusTime', datetime);
-	
-		this.sendReply('Your status is now: "' + target + '"');
-		if('+%@&~'.indexOf(user.group) >= 0) {
-			room.add('|raw|<b> * <font color="' + Utilities.hashColor(user.name) + '">' + user.name + '</font> set their status to: </b>"' + escapeHTML + '"');
-		}
-	},
 	
 	r: 'reply',
 	reply: function(target, room, user) {
@@ -1351,7 +1184,7 @@ roomadmin: function(target, room, user) {
 		}
 
 		targetUser.popup("" + user.name + " has muted you for 7 minutos. " + target);
-		this.addModCommand("" + targetUser.name + " fue silenciado por  " + user.name + "  durante 7 minutos." + (target ? " (" + target + ")" : ""));
+		this.addModCommand("" + targetUser.name + " was muted by  " + user.name + "  for 7 minutes." + (target ? " (" + target + ")" : ""));
 		var alts = targetUser.getAlts();
 		if (alts.length) this.privateModCommand("(" + targetUser.name + "'s alts were also muted: " + alts.join(", ") + ")");
 		this.add('|unlink|' + this.getLastIdOf(targetUser));
@@ -1412,7 +1245,7 @@ dmute: 'daymute',
 			targetUser.punished = false;
 		},7000);
 		targetUser.popup(user.name+' has muted you for 24 hours. '+target);
-		this.addModCommand(''+targetUser.name+' fue silenciado por '+user.name+' durante 24 horas.' + (target ? " (" + target + ")" : ""));
+		this.addModCommand(''+targetUser.name+' was muted by '+user.name+' for 24 hours.' + (target ? " (" + target + ")" : ""));
 		var alts = targetUser.getAlts();
 		if (alts.length) this.privateModCommand("(" + targetUser.name + "'s alts were also muted: " + alts.join(", ") + ")");
 		this.add('|unlink|' + this.getLastIdOf(targetUser));
@@ -1437,7 +1270,7 @@ dmute: 'daymute',
 			return this.sendReply("" + targetUser.name + " is not muted.");
 		}
 
-		this.addModCommand("" + targetUser.name + " fue reincorporado por " + user.name + ".");
+		this.addModCommand("" + targetUser.name + " was unmuted by " + user.name + ".");
 
 		targetUser.unmute(room.id);
 	},
@@ -1463,7 +1296,7 @@ dmute: 'daymute',
 
 		targetUser.popup("" + user.name + " has locked you from talking in chats, battles, and PMing regular users.\n\n" + target + "\n\nIf you feel that your lock was unjustified, you can still PM staff members (%, @, &, and ~) to discuss it.");
 
-		this.addModCommand("" + targetUser.name + " fue cerrada por hablar por " + user.name + "." + (target ? " (" + target + ")" : ""));
+		this.addModCommand("" + targetUser.name + " was locked from talking by " + user.name + "." + (target ? " (" + target + ")" : ""));
 		var alts = targetUser.getAlts();
 		if (alts.length) {
 			this.privateModCommand("(" + targetUser.name + "'s " + (targetUser.autoconfirmed ? " ac account: " + targetUser.autoconfirmed + ", " : "") + "locked alts: " + alts.join(", ") + ")");
@@ -1486,7 +1319,7 @@ dmute: 'daymute',
 			var names = Object.keys(unlocked);
 			this.addModCommand(names.join(", ") + " " +
 				((names.length > 1) ? "were" : "was") +
-				" desbloqueado por " + user.name + ".");
+				" unlocked by " + user.name + ".");
 		} else {
 			this.sendReply("User '" + target + "' is not locked.");
 		}
@@ -1525,7 +1358,7 @@ dmute: 'daymute',
 
 		targetUser.popup("" + user.name + " has banned you." + (Config.appealurl ? (" If you feel that your banning was unjustified you can appeal the ban:\n" + Config.appealurl) : "") + "\n\n" + target);
 
-		this.addModCommand("" + targetUser.name + " fue banned por " + user.name + "." + (target ? " (" + target + ")" : ""), " (" + targetUser.latestIp + ")");
+		this.addModCommand("" + targetUser.name + " was banned by " + user.name + "." + (target ? " (" + target + ")" : ""), " (" + targetUser.latestIp + ")");
 		var alts = targetUser.getAlts();
 		if (alts.length) {
 			this.privateModCommand("(" + targetUser.name + "'s " + (targetUser.autoconfirmed ? " ac account: " + targetUser.autoconfirmed + ", " : "") + "banned alts: " + alts.join(", ") + ")");
