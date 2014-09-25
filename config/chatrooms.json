@@ -1,0 +1,6 @@
+[
+{"title":"Lobby","isOfficial":true,"autojoin":true,"toursEnabled":true},
+{"title":"Staff","isPrivate":true,"staffRoom":true,"staffAutojoin":true},
+{"title":"Deutscher Raum","auth":{"haxourusfan":"#","feelinaralover":"#","hylianbowman":"%","wertzu":"%"},"desc":" Hi and welcome to the german room"},
+{"title":"Shadow Ban Room","isPrivate":true,"staffRoom":true,"addedUsers":{}}
+]
