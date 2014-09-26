@@ -377,6 +377,8 @@ global.hangman = require('./hangman.js').hangman();
 
 global.Clans = require('./clans.js');
 
+global.tour = require('./tour.js').tour();
+
 try {
 	global.Dnsbl = require('./dnsbl.js');
 } catch (e) {
