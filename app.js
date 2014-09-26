@@ -375,6 +375,8 @@ global.casino = require('./casino.js');
 
 global.hangman = require('./hangman.js').hangman();
 
+global.Clans = require('./clans.js');
+
 try {
 	global.Dnsbl = require('./dnsbl.js');
 } catch (e) {
